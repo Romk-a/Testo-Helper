@@ -2,13 +2,13 @@
     "name": "testo-helper",
     "displayName": "Testo Helper",
     "description": "Позволяет открывать тест-кейсы в Jira (в браузере) прямо из контекстного меню и быстро переходить к определениям макросов или включаемых файлов с помощью `Ctrl+Click` или `F12`",
-    "version": "1.1.4",
+    "version": "2.0.0",
     "publisher": "rgubarev",
     "license": "MIT",
     "repository": {
-		"type": "git",
-		"url": "https://github.com/Romk-a/Testo-Helper.git"
-	},
+        "type": "git",
+        "url": "https://github.com/Romk-a/Testo-Helper.git"
+    },
     "engines": {
         "vscode": "^1.75.0"
     },
@@ -18,12 +18,47 @@
     "keywords": [
         "testo"
     ],
-    "icon": "icon.png",
+    "icons": {
+        "default": "./icons/icon.png",
+        "fileExtensions": {
+            "testo": {
+                "light": "./icons/testo-light.svg",
+                "dark": "./icons/testo-dark.svg"
+            }
+        }
+    },
     "main": "./src/extension.js",
     "activationEvents": [
         "onLanguage:testo"
     ],
     "contributes": {
+        "languages": [
+            {
+                "id": "testo",
+                "extensions": [
+                    ".testo"
+                ],
+                "aliases": [
+                    "Testo Lang",
+                    "Testo",
+                    "testo"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "snippets": [
+            {
+                "language": "testo",
+                "path": "./snippets/testo.code-snippets"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "testo",
+                "scopeName": "source.testo",
+                "path": "./syntaxes/testo.tmLanguage.json"
+            }
+        ],
         "commands": [
             {
                 "command": "jiraOpener.openInJira",
