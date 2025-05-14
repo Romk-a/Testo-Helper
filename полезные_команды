@@ -1,0 +1,5 @@
+Скомпилируй плагин в .vsix:
+vsce package
+(один раз залогинтесь, используя токен)
+vsce login ифамилия
+vsce publish
