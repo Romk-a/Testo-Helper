@@ -1,6 +1,6 @@
 {
     "Шаблон цикла For": {
-      "prefix": ["for","forr"],
+      "prefix": ["forr"],
       "body": [
         "for (i IN RANGE ${1:N}){",
         "\t$0",
