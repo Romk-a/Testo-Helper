@@ -18,15 +18,7 @@
     "keywords": [
         "testo"
     ],
-    "icons": {
-        "default": "./icons/icon.png",
-        "fileExtensions": {
-            "testo": {
-                "light": "./icons/testo-light.svg",
-                "dark": "./icons/testo-dark.svg"
-            }
-        }
-    },
+    "icon": "./icons/icon.png",
     "main": "./src/extension.js",
     "activationEvents": [
         "onLanguage:testo"
@@ -43,7 +35,11 @@
                     "Testo",
                     "testo"
                 ],
-                "configuration": "./language-configuration.json"
+                "configuration": "./language-configuration.json",
+                "icon": {
+                    "light": "./icons/testo-light.svg",
+                    "dark": "./icons/testo-dark.svg"
+                }
             }
         ],
         "snippets": [
@@ -67,6 +63,10 @@
             {
                 "command": "jiraOpener.formatDocument",
                 "title": "Format Testo Document (Beta)"
+            },
+            {
+                "command": "testoHelper.testUpdateNotification",
+                "title": "Testo Helper: Show Update Notification"
             }
         ],
         "menus": {
