@@ -2,7 +2,7 @@
     "name": "testo-helper",
     "displayName": "Testo Helper",
     "description": "Позволяет открывать тест-кейсы в Jira (в браузере) прямо из контекстного меню и быстро переходить к определениям макросов или включаемых файлов с помощью `Ctrl+Click` или `F12`",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "publisher": "rgubarev",
     "license": "MIT",
     "repository": {
@@ -35,11 +35,7 @@
                     "Testo",
                     "testo"
                 ],
-                "configuration": "./language-configuration.json",
-                "icon": {
-                    "light": "./icons/testo-light.svg",
-                    "dark": "./icons/testo-dark.svg"
-                }
+                "configuration": "./language-configuration.json"
             }
         ],
         "snippets": [
