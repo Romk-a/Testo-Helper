@@ -9,6 +9,7 @@ function formatTestoDocument(document) {
     let isExecBlock = false; // Флаг для многострочного блока exec
     let execIndentLevel = 0; // Уровень вложенности для exec
     let isTypeBlock = false; // Флаг для блока type
+    let isHeredocBlock = false; // Флаг для блока heredoc (<<EOF ... EOF)
 
     for (let i = 0; i < lines.length; i++) {
         let line = lines[i]; // Сохраняем исходную строку с пробелами
@@ -60,7 +61,26 @@ function formatTestoDocument(document) {
 
         // Обработка многострочного блока exec
         if (isExecBlock) {
-            // Если строка заканчивается на """, это конец блока
+            // Проверяем, является ли строка началом heredoc
+            if (/<<\s*EOF/.test(trimmedLine) && !isHeredocBlock) {
+                isHeredocBlock = true;
+                formattedLines.push(' '.repeat((execIndentLevel + 1) * indentSize) + trimmedLine);
+                emptyLineCount = 0;
+                continue;
+            }
+
+            // Если в блоке heredoc
+            if (isHeredocBlock) {
+                formattedLines.push(line); // Копируем строку без изменений
+                emptyLineCount = 0;
+                // Проверяем, является ли строка концом heredoc
+                if (trimmedLine === 'EOF') {
+                    isHeredocBlock = false;
+                }
+                continue;
+            }
+
+            // Если строка заканчивается на """, это конец блока exec
             if (trimmedLine.endsWith('"""')) {
                 const content = trimmedLine.slice(0, -3).trim();
                 if (content) {
@@ -98,7 +118,7 @@ function formatTestoDocument(document) {
                 // Начало многострочного блока
                 formattedLines.push(indent + prefix);
                 if (content) {
-                    formattedLines.push(' '.repeat((indentLevel + 1) * indentSize) + content);
+                    formattedLines.push(' '.repeat((execIndentLevel + 1) * indentSize) + content);
                     emptyLineCount = 0;
                 }
                 isExecBlock = true;
