@@ -15,7 +15,7 @@ async function findMacroInFile(filePath, macroName, visitedFiles = new Set()) {
         const fileContent = await fs.readFile(filePath, 'utf8');
         // Учитываем макросы с параметрами: macro имя (параметры?) {
         const macroRegex = new RegExp(`macro\\s+${macroName}\\s*\\([^)]*\\)\\s*{`, 'm');
-        
+
         // Проверяем текущий файл
         if (macroRegex.test(fileContent)) {
             const match = fileContent.match(macroRegex);
@@ -24,11 +24,14 @@ async function findMacroInFile(filePath, macroName, visitedFiles = new Set()) {
         }
 
         // Ищем все include-директивы
-        const includeRegex = /include\s+"([^"]+)"/g;
+        // Обновлённое регулярное выражение для обработки экранированных символов
+        const includeRegex = /include\s+"((?:[^"\\]|\\.)+)"/g;
         const includes = [];
         let match;
         while ((match = includeRegex.exec(fileContent)) !== null) {
-            includes.push(match[1]);
+            // Удаляем экранирование из пути
+            const includePath = match[1].replace(/\\(.)/g, '$1');
+            includes.push(includePath);
         }
 
         // Проверяем каждый include рекурсивно
@@ -49,12 +52,14 @@ async function findMacroInFile(filePath, macroName, visitedFiles = new Set()) {
 class TestoDefinitionProvider {
     async provideDefinition(document, position, token) {
         const line = document.lineAt(position.line).text.trim();
-        const includeRegex = /include\s+"([^"]+)"/;
+        // Обновлённое регулярное выражение для обработки экранированных символов
+        const includeRegex = /include\s+"((?:[^"\\]|\\.)+)"/;
         const includeMatch = line.match(includeRegex);
 
         // Проверяем, является ли строка include
         if (includeMatch) {
-            const includePath = includeMatch[1];
+            // Удаляем экранирование из пути
+            const includePath = includeMatch[1].replace(/\\(.)/g, '$1');
             const absolutePath = path.resolve(path.dirname(document.uri.fsPath), includePath);
             try {
                 await fs.access(absolutePath);
@@ -63,6 +68,7 @@ class TestoDefinitionProvider {
                     new vscode.Position(0, 0)
                 );
             } catch (err) {
+                console.error(`Error accessing file ${absolutePath}:`, err);
                 return null;
             }
         }
