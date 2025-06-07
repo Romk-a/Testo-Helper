@@ -111,7 +111,7 @@ function formatTestoDocument(document) {
             // Если строка заканчивается на """, это однострочник
             if (content.endsWith('"""')) {
                 const innerContent = content.slice(0, -3).trim();
-                const formattedLine = `${prefix}${innerContent ? ' ' + innerContent : ''}"""`;
+                const formattedLine = `${prefix}${innerContent ? innerContent : ''}"""`;
                 formattedLines.push(indent + formattedLine);
                 emptyLineCount = 0;
             } else {
