@@ -1,6 +1,6 @@
 const vscode = require('vscode');
 const { registerJiraCommand } = require('./jiraOpener');
-const { registerDefinitionProvider } = require('./definitionProvider');
+const { registerProviders } = require('./definitionProvider');
 const { registerFormatCommand } = require('./formatting');
 const { showUpdateNotification, forceShowUpdateNotification } = require('./updateNotifier');
 
@@ -18,8 +18,8 @@ async function activate(context) {
     // Регистрируем команду для открытия в Jira
     registerJiraCommand(context);
 
-    // Регистрируем провайдер и команду перехода к определению
-    registerDefinitionProvider(context);
+    // Регистрируем провайдеры из defenitionProvider
+    registerProviders(context);
 
     // Регистрируем команду форматирования
     registerFormatCommand(context);

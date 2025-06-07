@@ -2,7 +2,7 @@
     "name": "testo-helper",
     "displayName": "Testo Helper",
     "description": "Позволяет открывать тест-кейсы в Jira (в браузере) прямо из контекстного меню и быстро переходить к определениям макросов или включаемых файлов с помощью `Ctrl+Click` или `F12`",
-    "version": "2.0.1",
+    "version": "2.1.0",
     "publisher": "rgubarev",
     "license": "MIT",
     "repository": {
@@ -94,6 +94,11 @@
                     "type": "string",
                     "default": "",
                     "description": "URL для открытия тест-кейсов в Jira. Укажите URL без идентификатора тест-кейса."
+                },
+                "testoHelper.enableHover": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Предварительный просмотр изображения при наведении на `img \"${param}\"` в файлах Testo."
                 }
             }
         }
