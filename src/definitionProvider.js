@@ -127,13 +127,13 @@ class TestoDefinitionProvider {
             return null;
         }
 
-        // Проверка на img "${...}"
-        const wordRange = document.getWordRangeAtPosition(position, /img\s*"\${[^}]*}"/);
+        // Проверка на img "${}" или find_img("${}")
+        const wordRange = document.getWordRangeAtPosition(position, /(?:img\s*"\${[^}]*}"|find_img\s*\("\${[^}]*}"\))/);
         if (wordRange) {
             const selectedText = document.getText(wordRange);
-            const imageMatch = selectedText.match(/img\s*"\${([^}]+)}"/);
+            const imageMatch = selectedText.match(/(?:img\s*"\${([^}]+)}"|find_img\s*\("\${([^}]+)}"\))/);
             if (imageMatch) {
-                const imageName = imageMatch[1];
+                const imageName = imageMatch[1] || imageMatch[2];
                 const imagePath = await findImagePathInFile(document.uri.fsPath, imageName, new Set());
                 if (imagePath) {
                     try {
@@ -182,16 +182,17 @@ class TestoHoverProvider {
             return null; // Если отключено, возвращаем null
         }
 
-        // Регулярное выражение для img с необязательным пробелом и ${}
-        const wordRange = document.getWordRangeAtPosition(position, /img\s*"\${[^}]*}"/);
+        // Регулярное выражение для img "${}" или find_img("${}")
+        const wordRange = document.getWordRangeAtPosition(position, /(?:img\s*"\${[^}]*}"|find_img\s*\("\${[^}]*}"\))/);
         if (!wordRange) return null;
 
         const selectedText = document.getText(wordRange);
-        // Проверяем только строки с ${}
-        const imageMatch = selectedText.match(/img\s*"\${([^}]+)}"/);
+        // Проверяем строки с img "${}" или find_img("${}")
+        const imageMatch = selectedText.match(/(?:img\s*"\${([^}]+)}"|find_img\s*\("\${([^}]+)}"\))/);
 
         if (imageMatch) {
-            const imageName = imageMatch[1];
+            // Извлекаем имя изображения из первой или второй группы захвата
+            const imageName = imageMatch[1] || imageMatch[2];
             const imagePath = await findImagePathInFile(document.uri.fsPath, imageName, new Set());
 
             if (imagePath) {
