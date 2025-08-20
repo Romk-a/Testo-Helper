@@ -212,7 +212,7 @@
 			"name": "meta.head.testo",
 			"patterns": [
 				{
-					"match": "\\b(param)\\b ([A-Za-z_][A-Za-z_0-9]*)",
+					"match": "\\b(param|image)\\b ([A-Za-z_][A-Za-z_0-9]*)",
 					"captures": {
 						"1": {
 							"name": "storage.type.testo"
@@ -224,7 +224,7 @@
 				},
 				{
 					"name": "storage.type.testo",
-					"match": "\\bparam\\b "
+					"match": "\\bparam|image\\b "
 				}
 			]
 		},
@@ -259,7 +259,7 @@
 			"patterns": [
 				{
 					"name": "keyword.other.operator.testo",
-					"match": "\\b(type|wait|press|plug flash|unplug flash|plug|unplug|start|stop|exec|copyto|copyfrom|shutdown|print|abort|mouse|sleep|hold|release|screenshot)\\b"
+					"match": "\\b(type|wait|press|plug flash|unplug flash|plug|unplug|start|stop|exec|copyto|copyfrom|shutdown|print|abort|mouse|sleep|hold|release|screenshot|step)\\b"
 				}
 			]
 		},
@@ -267,7 +267,7 @@
 			"patterns": [
 				{
 					"name": "support.function",
-					"match": "\\b(EQUAL|LESS|GREATER|STREQUAL|STRGREATER|STRLESS|RANGE|IN|DEFINED)\\b"
+					"match": "\\b(EQUAL|LESS|GREATER|STREQUAL|STRMATCH|STRGREATER|STRLESS|RANGE|IN|DEFINED)\\b"
 				}
 			]
 		},

@@ -64,8 +64,9 @@ async function findImagePathInFile(filePath, imageName, visitedFiles = new Set()
 
         if (path.basename(filePath) === 'images.testo') {
             const escapedImageName = imageName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const paramRegex = new RegExp(`param\\s+${escapedImageName}\\s+"([^"]+)"`, 'i');
-            const match = fileContent.match(paramRegex);
+            // Ищем как `param имя "путь"` так и `image имя "путь"`
+            const declarationRegex = new RegExp(`(?:param|image)\\s+${escapedImageName}\\s+"([^"]+)"`, 'i');
+            const match = fileContent.match(declarationRegex);
             if (match) {
                 let imagePath = match[1];
                 const who = os.userInfo().username;
