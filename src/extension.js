@@ -3,6 +3,7 @@ const { registerJiraCommand } = require('./jiraOpener');
 const { registerProviders } = require('./definitionProvider');
 const { registerFormatCommand } = require('./formatting');
 const { showUpdateNotification, forceShowUpdateNotification } = require('./updateNotifier');
+const { registerStepCounter } = require('./stepCounter');
 
 async function activate(context) {
     // Показываем уведомление об обновлении
@@ -23,6 +24,9 @@ async function activate(context) {
 
     // Регистрируем команду форматирования
     registerFormatCommand(context);
+
+    // Регистрируем счётчик шагов
+    registerStepCounter(context);
 }
 
 module.exports = {
