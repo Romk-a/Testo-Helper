@@ -200,7 +200,20 @@ class TestoHoverProvider {
                 const ext = path.extname(imagePath).toLowerCase();
                 if (binaryExtensions.includes(ext)) {
                     try {
-                        // Читаем содержимое изображения и кодируем в base64
+                        // FixMe: Base64 в какой-то момент обрезается и превью перестаёт работать. Известно что 67КБ открывает, 77КБ уже нет.
+                        // Проверяем размер файла
+                        const stats = await fs.stat(imagePath);
+                        const maxSizeInBytes = 70 * 1024; // 70 КБ
+
+                        if (stats.size > maxSizeInBytes) {
+                            return new vscode.Hover(
+                                new vscode.MarkdownString(
+                                    `Превью для img размером больше 70КБ не поддерживается. Используйте **Ctrl + Click**, чтобы посмотреть img.`
+                                )
+                            );
+                        }
+
+                        // Читаем и отображаем только если размер <= 70 КБ
                         const imageBuffer = await fs.readFile(imagePath);
                         const base64Image = imageBuffer.toString('base64');
                         const mimeType = ext === '.png' ? 'image/png' : 'image/jpeg'; // Определяем MIME-тип
