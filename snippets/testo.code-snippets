@@ -1,11 +1,20 @@
 {
     "Шаблон цикла For": {
-      "prefix": ["forr"],
-      "body": [
-        "for (i IN RANGE ${1:N}){",
-        "\t$0",
-        "}"
-      ],
-      "description": "Вставляет цикл For с индексом i и циклом по N"
+        "prefix": ["forr"],
+        "body": [
+            "for (i IN RANGE ${1:N}){",
+            "\t$0",
+            "}"
+        ],
+        "description": "Вставляет цикл For с индексом i и циклом по N"
+    },
+    "Шаблон для бага": {
+        "prefix": ["bugg"],
+        "body": [
+            "if (check \"$1\" timeout 10s) {",
+            "\tprint \"Bug BT-${2:XXXXX}\"",
+            "}$0"
+        ],
+        "description": "Вставляет шаблон проверки и вывода бага с указанием номера"
     }
-  }
+}
