@@ -1,2 +1,13 @@
-# Игнорировать все .vsix файлы
-*.vsix
+```
+# Backup files
+*.js.bak
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+
+# Editors
+.vscode/
+.idea/
+```
