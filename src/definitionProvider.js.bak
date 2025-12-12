@@ -9,135 +9,46 @@ const reservedKeywords = ['if', 'for', 'while', 'switch', 'do', 'else'];
 // Список расширений файлов, которые считаются бинарными (изображения)
 const binaryExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp'];
 
-// Документация для специальных ключевых слов
-const keywordDocumentation = {
-    'type': {
-        title: 'type',
-        description: 'Вводит текст в поле ввода',
-        usage: 'type "текст для ввода"',
-        example: 'type "Hello World"'
-    },
-    'wait': {
-        title: 'wait',
-        description: 'Ожидает появление элемента на экране',
-        usage: 'wait "имя_элемента" | wait "имя_элемента" 10s',
-        example: 'wait "login_button" 5s'
-    },
-    'press': {
-        title: 'press',
-        description: 'Нажимает клавишу или комбинацию клавиш',
-        usage: 'press "клавиша"',
-        example: 'press "Enter" | press "Ctrl+A"'
-    },
-    'start': {
-        title: 'start',
-        description: 'Запускает приложение или процесс',
-        usage: 'start "путь_к_приложению" "аргументы"',
-        example: 'start "notepad.exe" "file.txt"'
-    },
-    'stop': {
-        title: 'stop',
-        description: 'Останавливает запущенное приложение или процесс',
-        usage: 'stop "имя_процесса"',
-        example: 'stop "notepad.exe"'
-    },
-    'exec': {
-        title: 'exec',
-        description: 'Выполняет внешнюю команду или скрипт',
-        usage: 'exec "команда"',
-        example: 'exec "ls -la"'
-    },
-    'copyto': {
-        title: 'copyto',
-        description: 'Копирует файлы на устройство',
-        usage: 'copyto "источник" "назначение"',
-        example: 'copyto "local_file.txt" "/remote/path/"'
-    },
-    'copyfrom': {
-        title: 'copyfrom',
-        description: 'Копирует файлы с устройства',
-        usage: 'copyfrom "источник" "назначение"',
-        example: 'copyfrom "/remote/file.txt" "local_path/"'
-    },
-    'shutdown': {
-        title: 'shutdown',
-        description: 'Выключает устройство',
-        usage: 'shutdown',
-        example: 'shutdown'
-    },
-    'print': {
-        title: 'print',
-        description: 'Выводит сообщение в лог',
-        usage: 'print "сообщение"',
-        example: 'print "Тест успешно завершен"'
-    },
-    'abort': {
-        title: 'abort',
-        description: 'Прерывает выполнение теста',
-        usage: 'abort "причина"',
-        example: 'abort "Критическая ошибка в тесте"'
-    },
-    'mouse': {
-        title: 'mouse',
-        description: 'Выполняет операции с мышью',
-        usage: 'mouse click | mouse lclick | mouse rclick | mouse dclick | mouse hold | mouse release',
-        example: 'mouse click "button_image"'
-    },
-    'sleep': {
-        title: 'sleep',
-        description: 'Приостанавливает выполнение на заданное время',
-        usage: 'sleep 5s',
-        example: 'sleep 10s'
-    },
-    'hold': {
-        title: 'hold',
-        description: 'Удерживает элемент (обычно используется с мышью)',
-        usage: 'hold "элемент"',
-        example: 'hold "slider"'
-    },
-    'release': {
-        title: 'release',
-        description: 'Освобождает удерживаемый элемент',
-        usage: 'release "элемент"',
-        example: 'release "slider"'
-    },
-    'screenshot': {
-        title: 'screenshot',
-        description: 'Делает скриншот экрана',
-        usage: 'screenshot "имя_файла"',
-        example: 'screenshot "test_result.png"'
-    },
-    'step': {
-        title: 'step',
-        description: 'Отмечает шаг в тесте, используется для отладки',
-        usage: 'step "описание_шага"',
-        example: 'step "Проверка входа в систему"'
-    },
-    'plug': {
-        title: 'plug',
-        description: 'Подключает устройство (например, флешку)',
-        usage: 'plug "устройство"',
-        example: 'plug "flash" | plug "usb_device"'
-    },
-    'unplug': {
-        title: 'unplug',
-        description: 'Отключает устройство',
-        usage: 'unplug "устройство"',
-        example: 'unplug "flash" | unplug "usb_device"'
-    },
-    'plug flash': {
-        title: 'plug flash',
-        description: 'Подключает флеш-устройство',
-        usage: 'plug flash',
-        example: 'plug flash'
-    },
-    'unplug flash': {
-        title: 'unplug flash',
-        description: 'Отключает флеш-устройство',
-        usage: 'unplug flash',
-        example: 'unplug flash'
+// Загрузка документации из внешнего файла
+let keywordDocumentation = {};
+try {
+    const docsPath = path.join(__dirname, '../testo_keywords.json');
+    const docsContent = fs.readFileSync(docsPath, 'utf8');
+    const rawDocs = JSON.parse(docsContent);
+    
+    // Преобразуем формат документации для соответствия ожидаемой структуре
+    for (const [key, value] of Object.entries(rawDocs)) {
+        keywordDocumentation[key] = {
+            title: key,
+            description: value.description,
+            usage: value.syntax || `${key}`,
+            example: Array.isArray(value.examples) ? value.examples.join(' | ') : value.examples || ''
+        };
     }
-};
+} catch (error) {
+    console.error('Ошибка загрузки документации:', error);
+    // Используем базовый набор, если не удалось загрузить файл
+    keywordDocumentation = {
+        'wait': {
+            title: 'wait',
+            description: 'Ожидает указанное количество времени или выполнение условия',
+            usage: 'wait(время|условие)',
+            example: 'wait(5) | wait(условие)'
+        },
+        'start': {
+            title: 'start',
+            description: 'Запускает выполнение процесса или действия',
+            usage: 'start(процесс)',
+            example: 'start(процесс1)'
+        },
+        'stop': {
+            title: 'stop',
+            description: 'Останавливает выполнение процесса или действия',
+            usage: 'stop(процесс)',
+            example: 'stop(процесс1)'
+        }
+    };
+}
 
 async function findMacroInFile(filePath, macroName, visitedFiles = new Set()) {
     if (visitedFiles.has(filePath)) {
@@ -311,26 +222,6 @@ class TestoHoverProvider {
         const isHoverEnabled = config.get('enableHover', true);
         if (!isHoverEnabled) {
             return null; // Если отключено, возвращаем null
-        }
-
-        // Проверяем сначала на ключевые слова
-        const wordRange = document.getWordRangeAtPosition(position);
-        if (wordRange) {
-            const word = document.getText(wordRange).trim();
-            
-            // Проверяем, является ли слово ключевым словом с документацией
-            if (keywordDocumentation[word]) {
-                const doc = keywordDocumentation[word];
-                const hoverText = `**${doc.title}**\n\n`;
-                const description = `${doc.description}\n\n`;
-                const usage = `**Синтаксис:** \`${doc.usage}\`\n\n`;
-                const example = doc.example ? `**Пример:** \`${doc.example}\`` : '';
-                
-                const markdownString = new vscode.MarkdownString(hoverText + description + usage + example);
-                markdownString.isTrusted = true;
-                
-                return new vscode.Hover(markdownString);
-            }
         }
 
         // Регулярное выражение для img "${}" или find_img("${}")
