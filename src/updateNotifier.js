@@ -24,33 +24,33 @@ async function showUpdateNotification(context) {
         return;
     }
 
-    // Версия изменилась — покажем уведомление
+    // Версия изменилась — покажем уведомление (асинхронно, не блокируя активацию)
     const changelogPath = path.join(context.extensionPath, 'changelog.md');
     const changelogExists = fs.existsSync(changelogPath);
 
-    const action = await vscode.window.showInformationMessage(
+    vscode.window.showInformationMessage(
         `[Testo Helper v${currentVersion}] обновился! Узнай, что изменилось.`,
-        'Посмотреть changelog'
-    );
-
-    if (action === 'Посмотреть changelog') {
-        if (changelogExists) {
-            try {
-                // Создаем URI для файла changelog.md
-                const changelogUri = vscode.Uri.file(changelogPath);
-
-                // Открываем файл с предпросмотром Markdown
-                await vscode.commands.executeCommand('markdown.showPreview', changelogUri);
-            } catch (err) {
-                vscode.window.showErrorMessage(`Ошибка открытия changelog: ${err.message}`);
+        'Посмотреть changelog',
+        'Напомнить позже'
+    ).then(async (action) => {
+        if (action === 'Посмотреть changelog') {
+            if (changelogExists) {
+                try {
+                    const changelogUri = vscode.Uri.file(changelogPath);
+                    await vscode.commands.executeCommand('markdown.showPreview', changelogUri);
+                } catch (err) {
+                    vscode.window.showErrorMessage(`Ошибка открытия changelog: ${err.message}`);
+                }
+            } else {
+                vscode.window.showWarningMessage('Файл changelog не найден.');
             }
-        } else {
-            vscode.window.showWarningMessage('Файл changelog не найден.');
         }
-    }
 
-    // Сохраняем текущую версию как последнюю
-    await context.globalState.update('testoHelper.lastVersion', currentVersion);
+        // Сохраняем версию, если не нажата кнопка "Напомнить позже"
+        if (action !== 'Напомнить позже') {
+            await context.globalState.update('testoHelper.lastVersion', currentVersion);
+        }
+    });
 }
 
 async function forceShowUpdateNotification(context) {
