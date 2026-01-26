@@ -29,7 +29,7 @@ async function showUpdateNotification(context) {
     const changelogExists = fs.existsSync(changelogPath);
 
     vscode.window.showInformationMessage(
-        `[Testo Helper v${currentVersion}] обновился! Узнай, что изменилось.`,
+        `Testo Helper обновился: v${lastVersion} → v${currentVersion}`,
         'Посмотреть changelog',
         'Напомнить позже'
     ).then(async (action) => {
