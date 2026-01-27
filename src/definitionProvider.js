@@ -23,7 +23,7 @@ async function findMacroInFile(filePath, macroName, visitedFiles = new Set()) {
         // Проверяем текущий файл
         if (macroRegex.test(fileContent)) {
             const match = fileContent.match(macroRegex);
-            const line = fileContent.substr(0, match.index).split('\n').length - 1;
+            const line = fileContent.substring(0, match.index).split('\n').length - 1;
             return { filePath, line };
         }
 
