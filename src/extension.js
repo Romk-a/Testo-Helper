@@ -4,6 +4,7 @@ const { registerProviders } = require('./definitionProvider');
 const { registerFormatCommand } = require('./formatting');
 const { showUpdateNotification, forceShowUpdateNotification } = require('./updateNotifier');
 const { registerStepCounter } = require('./stepCounter');
+const { registerDocsCommand } = require('./docsPanel');
 
 async function activate(context) {
     // Показываем уведомление об обновлении
@@ -27,6 +28,9 @@ async function activate(context) {
 
     // Регистрируем счётчик шагов
     registerStepCounter(context);
+
+    // Регистрируем команду справки
+    registerDocsCommand(context);
 }
 
 module.exports = {

@@ -2,6 +2,7 @@ const vscode = require('vscode');
 const path = require('path');
 const fs = require('fs').promises;
 const os = require('os');
+const builtinDocs = require('./builtinDocs');
 
 // Список ключевых слов, которые не должны распознаваться как макросы
 const reservedKeywords = ['if', 'for', 'while', 'switch', 'do', 'else'];
@@ -183,11 +184,34 @@ class TestoHoverProvider {
             return null; // Если отключено, возвращаем null
         }
 
-        // Регулярное выражение для img "${}" или find_img("${}")
-        const wordRange = document.getWordRangeAtPosition(position, /(?:img\s*"\${[^}]*}"|find_img\s*\("\${[^}]*}"\))/);
-        if (!wordRange) return null;
+        // Проверяем, наведён ли курсор на встроенную функцию
+        const isDocsHoverEnabled = config.get('enableDocsHover', true);
+        if (isDocsHoverEnabled) {
+            const wordRange = document.getWordRangeAtPosition(position, /\b[a-zA-Z_]+\b/);
+            if (wordRange) {
+                const word = document.getText(wordRange);
+                const doc = builtinDocs[word];
+                if (doc) {
+                    const md = new vscode.MarkdownString();
+                    md.appendCodeblock(doc.syntax, 'testo');
+                    md.appendMarkdown(`\n${doc.description}\n\n`);
+                    if (doc.params && doc.params.length > 0) {
+                        md.appendMarkdown('**Параметры:**\n');
+                        doc.params.forEach(p => md.appendMarkdown(`- ${p}\n`));
+                        md.appendMarkdown('\n');
+                    }
+                    md.appendMarkdown('**Пример:**\n');
+                    md.appendCodeblock(doc.example, 'testo');
+                    return new vscode.Hover(md);
+                }
+            }
+        }
 
-        const selectedText = document.getText(wordRange);
+        // Регулярное выражение для img "${}" или find_img("${}")
+        const imgRange = document.getWordRangeAtPosition(position, /(?:img\s*"\${[^}]*}"|find_img\s*\("\${[^}]*}"\))/);
+        if (!imgRange) return null;
+
+        const selectedText = document.getText(imgRange);
         // Проверяем строки с img "${}" или find_img("${}")
         const imageMatch = selectedText.match(/(?:img\s*"\${([^}]+)}"|find_img\s*\("\${([^}]+)}"\))/);
 
