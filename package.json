@@ -2,7 +2,7 @@
     "name": "testo-helper",
     "displayName": "Testo Helper",
     "description": "Полноценная поддержка языка Testo: подсветка синтаксиса, сниппеты, переход к определениям (Ctrl+Click), превью изображений, справка по командам, форматирование кода, интеграция с Jira",
-    "version": "2.4.5",
+    "version": "2.4.2",
     "publisher": "rgubarev",
     "license": "MIT",
     "repository": {
