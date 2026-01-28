@@ -246,13 +246,13 @@ const builtinDocs = {
 
     'macro': {
         category: 'Объявления',
-        syntax: 'macro <name>([params]) { }',
-        description: 'Объявление макроса — переиспользуемого блока действий.',
+        syntax: 'macro <name>([arg1, arg2, argN="default"]) { }',
+        description: 'Объявление макроса — переиспользуемого именованного блока кода.',
         params: [
-            '`name` — имя макроса',
-            '`params` — параметры макроса (опционально)'
+            '`name` — уникальное имя макроса (идентификатор)',
+            '`args` — аргументы (только строки), могут иметь значения по умолчанию'
         ],
-        example: 'macro login(user, pass) {\n    type "${user}"\n    press Tab\n    type "${pass}"\n}'
+        example: 'macro login(user, pass="${DEFAULT_PASS}") {\n    wait "login:"; type "${user}"; press Enter\n    wait "Password:"; type "${pass}"; press Enter\n}\n\n# Вызов:\nmy_vm login("root")'
     },
 
     'param': {
@@ -310,13 +310,22 @@ const builtinDocs = {
 
     'if': {
         category: 'Управление потоком',
-        syntax: 'if (<expression>) { } [else { }]',
-        description: 'Условный оператор. Выражение может содержать `check`, сравнения (`STREQUAL`, `LESS`), логические операторы (`AND`, `OR`, `NOT`).',
+        syntax: 'if (<expression>) { } [else [if (<expr2>)] { }]',
+        description: 'Условный оператор. Поддерживает каскадные конструкции `else if`.',
         params: [
-            '`expression` — логическое выражение',
-            '`else` — блок для случая false (опционально)'
+            '**Выражения (expression):**',
+            '`"строка"` — пустая = false, непустая = true',
+            '`DEFINED var` — true если параметр определён',
+            '`check <expr> [timeout] [interval]` — проверка экрана (только для ВМ)',
+            '`NOT <expr>` — отрицание',
+            '`<expr1> AND <expr2>` — логическое И',
+            '`<expr1> OR <expr2>` — логическое ИЛИ',
+            '**Сравнения строк:**',
+            '`STREQUAL` — равенство, `STRMATCH` — regex, `STRLESS`/`STRGREATER` — лексикографически',
+            '**Сравнения чисел** (оба операнда должны быть числами):',
+            '`EQUAL`, `LESS`, `GREATER`'
         ],
-        example: 'if (check "Error" timeout 5s) {\n    abort "Ошибка"\n} else {\n    print "OK"\n}'
+        example: 'if (check "Error" timeout 5s) {\n    abort "Ошибка"\n}\nelse if (DEFINED some_var) {\n    print "${some_var}"\n}\n\nif ("${VM_POOL}" STRMATCH ".*4.*") {\n    print "ARM architecture"\n}'
     },
 
     'for': {
