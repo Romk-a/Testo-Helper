@@ -75,14 +75,17 @@ const builtinDocs = {
 
     'exec': {
         category: 'Действия с ВМ',
-        syntax: 'exec <interpreter> <script> [timeout <time>]',
-        description: 'Выполняет скрипт в ВМ через указанный интерпретатор. Требует testo-guest-additions.',
+        syntax: 'exec <interpreter> <script> [with <cmd> as <user>] [expect <regex>] [timeout <time>]',
+        description: 'Выполняет скрипт в ВМ через указанный интерпретатор. Требует testo-guest-additions. При ошибке (код возврата ≠ 0) тест завершается с ошибкой.',
         params: [
             '`interpreter` — `bash`, `cmd`, `python`, `python2`, `python3`',
             '`script` — строка со скриптом',
+            '`with` — команда запуска: `systemd-run`, `pdp-exec` (опционально)',
+            '`as` — пользователь для `with` (обязателен если указан `with`)',
+            '`expect` — regex для проверки вывода (синтаксис egrep, экранирование `\\\\`)',
             '`timeout` — максимальное время выполнения (по умолчанию 10 минут)'
         ],
-        example: 'exec bash "echo Hello"\nexec python """\nprint("Hello")\n""" timeout 5m'
+        example: 'exec bash "echo Hello"\nexec python """\nprint("Hello")\n""" timeout 5m\nexec bash "cmd" with systemd-run as "user"\nexec bash "./test.sh" expect "PASSED|OK"'
     },
 
     'print': {
