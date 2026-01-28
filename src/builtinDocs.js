@@ -130,6 +130,14 @@ const builtinDocs = {
         example: 'screenshot "/tmp/screenshot.png"'
     },
 
+    'step': {
+        category: 'Действия с ВМ',
+        syntax: 'step',
+        description: 'Маркер шага теста.  \nВыводит в лог `======== STEP N ========`  \nНомера шагов автоинкрементируются.',
+        params: [],
+        example: 'step #1\nwait "Логин"\ntype "admin"\n\nstep #2\npress Enter\nwait "Главное меню"'
+    },
+
     // === УПРАВЛЕНИЕ ВМ ===
 
     'start': {
