@@ -64,13 +64,24 @@ const builtinDocs = {
     'mouse': {
         category: 'Действия с ВМ',
         syntax: 'mouse <action> [destination] [timeout <time>]',
-        description: 'Действия с мышью: перемещение, клики, зажатие кнопок, прокрутка.',
+        description: 'Действия с мышью: перемещение, клики, зажатие/отпускание кнопок, прокрутка колесика.',
         params: [
-            '`action` — `move`, `click`/`lclick`, `rclick`, `dclick`, `hold`, `release`, `wheel-up`, `wheel-down`',
-            '`destination` — координаты (`100 250`), строка (`"Текст"`), изображение (`img "path"`), JS-селектор',
-            'Уточнения: `.from_top(N)`, `.center()`, `.move_right(N)` и др.'
+            '**action (действия):**',
+            '`move` — переместить курсор',
+            '`click`/`lclick` — левый клик, `rclick` — правый клик, `dclick` — двойной клик',
+            '`hold <lbtn|rbtn>` — зажать кнопку, `release` — отпустить',
+            '`wheel-up`/`wheel-down` — прокрутка [scroll N] [timeout] [interval]',
+            '**destination (куда):**',
+            '`X Y` — координаты в пикселях (`100 250`)',
+            '`"Текст"` — надпись на экране',
+            '`img "path"` — изображение',
+            '`js "return ..."` — JS-селектор (должен вернуть `{x, y}`)',
+            '**Спецификаторы (через точку):**',
+            'Выбор экземпляра: `.from_top(N)`, `.from_bottom(N)`, `.from_left(N)`, `.from_right(N)`',
+            'Позиция курсора: `.center()`, `.left_top()`, `.right_bottom()`, `.left_center()`, `.right_center()`, `.center_top()`, `.center_bottom()`, `.left_bottom()`, `.right_top()`',
+            'Смещение: `.move_left(N)`, `.move_right(N)`, `.move_up(N)`, `.move_down(N)`'
         ],
-        example: 'mouse click "OK"\nmouse move img "icon.png"\nmouse rclick "Файл".from_top(1)'
+        example: 'mouse click "OK"\nmouse move 400 0\nmouse rclick "Корзина" timeout 10m\nmouse dclick img "icon.png".from_bottom(0)\nmouse click "DNS-сервер".right_center().move_right(30)\nmouse hold lbtn\nmouse release\nmouse wheel-down scroll 5'
     },
 
     'exec': {
