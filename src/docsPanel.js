@@ -326,7 +326,7 @@ class DocsPanelManager {
     </div>
 
     <div class="tab-content hidden" id="keys-tab">
-        <div class="keys-note">Названия клавиш регистронезависимые. Нажмите на клавишу, чтобы скопировать.</div>
+        <div class="keys-note">Названия клавиш регистронезависимые. Нажмите на клавишу, чтобы скопировать в буфер обмена.</div>
         ${keysHtml}
     </div>
     <script nonce="${nonce}">

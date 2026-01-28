@@ -166,6 +166,18 @@ const builtinDocs = {
         example: 'shutdown timeout 2m'
     },
 
+    'snapshot': {
+        category: 'Управление ВМ',
+        syntax: 'snapshot <action>',
+        description: 'Управление временными снимками всех ВМ в тесте.',
+        params: [
+            '`create` — создать временный снимок',
+            '`revert` — откатить к созданному снимку',
+            '⚠️ При откате значения динамических переменных `$<VAR>` также откатываются'
+        ],
+        example: 'snapshot create\n# ... действия ...\nif (check "Ошибка") {\n    snapshot revert\n}'
+    },
+
     // === КЛАВИШИ ===
 
     'hold': {
@@ -338,13 +350,14 @@ const builtinDocs = {
 
     'for': {
         category: 'Управление потоком',
-        syntax: 'for (<var> IN RANGE <N>) { }',
-        description: 'Цикл с переменной от 0 до N-1.',
+        syntax: 'for (<var> IN RANGE [start] <end>) { }',
+        description: 'Цикл с переменной. Доступ к счётчику внутри цикла: `${var}`.',
         params: [
-            '`var` — переменная цикла',
-            '`N` — количество итераций'
+            '`var` — переменная цикла (доступна как `${var}`)',
+            '`RANGE N` — от 0 до N-1',
+            '`RANGE start end` — от start до end-1'
         ],
-        example: 'for (i IN RANGE 5) {\n    press Down\n}'
+        example: 'for (i IN RANGE 5) {\n    press Down\n}\n\n# Использование счётчика:\nfor (i IN RANGE 1 25) {\n    wait js "return find_text().match(`Прогресс`).size() == `${i}`"\n}'
     },
 
     'break': {
@@ -373,6 +386,22 @@ const builtinDocs = {
             '`path` — путь к файлу изображения'
         ],
         example: 'wait img "${IMG_DIR}/button.png"\nmouse click img "icon.png"'
+    },
+
+    // === ПЕРЕМЕННЫЕ ===
+
+    'Динамические переменные': {
+        category: 'Переменные',
+        syntax: '$<VAR_NAME>',
+        description: 'Динамические переменные — создаются в runtime из гостевой ОС.  \nОтличие от параметров: `${PARAM}` подставляется до запуска, `$<VAR>` — во время выполнения.',
+        params: [
+            '**Создание** (внутри `exec`):',
+            '`testo-guest-additions-cli set VAR "value"`',
+            '`--global` — доступна другим ВМ в этом тесте',
+            '**Использование в:** `exec`, `wait`, `check`, `type`',
+            '**Наследование:** переменные доступны в дочерних тестах'
+        ],
+        example: 'exec bash """\n    VER=$(uname -r)\n    testo-guest-additions-cli set KERNEL "$VER"\n"""\nprint "Ядро: $<KERNEL>"\n\n# Глобальная переменная между ВМ:\nvm1 { exec bash "testo-guest-additions-cli set IP 192.168.1.1 --global" }\nvm2 { wait "$<IP>" }'
     }
 };
 
