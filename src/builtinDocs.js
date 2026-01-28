@@ -46,9 +46,10 @@ const builtinDocs = {
         params: [
             '`text` — строка для ввода',
             '`interval` — задержка между нажатиями (по умолчанию 30ms)',
-            '`autoswitch` — комбинация для автопереключения раскладки'
+            '`autoswitch` — комбинация для автопереключения раскладки',
+            '⚠️ `autoswitch` нестабилен — лучше использовать макросы `enrus()` и `rusen()`'
         ],
-        example: 'type "Hello world"\ntype "Привет мир!" autoswitch LeftShift+LeftAlt'
+        example: 'type "Hello world" interval 100ms'
     },
 
     'sleep': {
