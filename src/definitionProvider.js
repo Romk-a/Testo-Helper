@@ -193,8 +193,13 @@ class TestoHoverProvider {
                 const doc = builtinDocs[word];
                 if (doc) {
                     const md = new vscode.MarkdownString();
+                    md.isTrusted = true; // Разрешаем command-ссылки
                     md.appendCodeblock(doc.syntax, 'testo');
                     md.appendMarkdown(`\n${doc.description}\n\n`);
+                    // Добавляем ссылку на список клавиш для press
+                    if (word === 'press') {
+                        md.appendMarkdown('[Список всех клавиш](command:testoHelper.showKeysReference)\n\n');
+                    }
                     if (doc.params && doc.params.length > 0) {
                         md.appendMarkdown('**Параметры:**\n');
                         doc.params.forEach(p => md.appendMarkdown(`- ${p}\n`));

@@ -1,14 +1,17 @@
 const vscode = require('vscode');
 const builtinDocs = require('./builtinDocs');
+const keysReference = require('./keysReference');
 
 class DocsPanelManager {
     static currentPanel = undefined;
 
-    static createOrShow(extensionUri) {
+    static createOrShow(extensionUri, initialTab = 'functions') {
         const column = vscode.ViewColumn.Beside;
 
         if (DocsPanelManager.currentPanel) {
             DocsPanelManager.currentPanel.panel.reveal(column);
+            // Переключаем на нужную вкладку, если панель уже открыта
+            DocsPanelManager.currentPanel.switchToTab(initialTab);
             return;
         }
 
@@ -22,16 +25,21 @@ class DocsPanelManager {
             }
         );
 
-        DocsPanelManager.currentPanel = new DocsPanelManager(panel);
+        DocsPanelManager.currentPanel = new DocsPanelManager(panel, initialTab);
     }
 
-    constructor(panel) {
+    constructor(panel, initialTab = 'functions') {
         this.panel = panel;
+        this.initialTab = initialTab;
         this.panel.webview.html = this.getWebviewContent();
 
         this.panel.onDidDispose(() => {
             DocsPanelManager.currentPanel = undefined;
         });
+    }
+
+    switchToTab(tabName) {
+        this.panel.webview.postMessage({ command: 'switchTab', tab: tabName });
     }
 
     getWebviewContent() {
@@ -60,6 +68,24 @@ class DocsPanelManager {
                     <div class="example">
                         <strong>Пример:</strong>
                         <pre><code>${escapeHtml(doc.example)}</code></pre>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Генерация HTML для клавиш
+        const keysHtml = Object.entries(keysReference).map(([group, keys]) => {
+            const keysItems = keys.map(k => `
+                <div class="key-item">
+                    <code class="key-name">${escapeHtml(k.key)}</code>
+                    <span class="key-desc">${escapeHtml(k.desc)}</span>
+                </div>
+            `).join('');
+            return `
+                <div class="keys-group">
+                    <h3>${escapeHtml(group)}</h3>
+                    <div class="keys-list">
+                        ${keysItems}
                     </div>
                 </div>
             `;
@@ -206,19 +232,103 @@ class DocsPanelManager {
             color: var(--vscode-button-foreground);
             border-color: var(--vscode-button-background);
         }
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+        .tab {
+            padding: 6px 16px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 4px;
+            color: var(--vscode-foreground);
+            font-size: 13px;
+        }
+        .tab:hover {
+            background: var(--vscode-list-hoverBackground);
+        }
+        .tab.active {
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+        }
+        .tab-content.hidden {
+            display: none;
+        }
+        .keys-group {
+            margin-bottom: 20px;
+        }
+        .keys-group h3 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            color: var(--vscode-textLink-foreground);
+        }
+        .keys-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 6px;
+        }
+        .key-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .key-name {
+            background: var(--vscode-textCodeBlock-background);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            min-width: 100px;
+            font-family: var(--vscode-editor-font-family);
+            cursor: pointer;
+            transition: background-color 0.15s, color 0.15s;
+        }
+        .key-name:hover {
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+        }
+        .key-name.copied {
+            background: var(--vscode-testing-iconPassed, #4caf50);
+            color: white;
+        }
+        .key-desc {
+            color: var(--vscode-descriptionForeground);
+            font-size: 12px;
+        }
+        .keys-note {
+            background: var(--vscode-textBlockQuote-background);
+            border-left: 3px solid var(--vscode-textLink-foreground);
+            padding: 8px 12px;
+            margin-bottom: 16px;
+            font-size: 12px;
+            color: var(--vscode-descriptionForeground);
+        }
     </style>
 </head>
 <body>
-    <div class="search-container">
-        <input type="text" id="search" placeholder="Поиск по функциям..." autofocus>
-        <div class="categories">
-            ${categoriesHtml}
+    <div class="tabs">
+        <button class="tab active" data-tab="functions">Функции</button>
+        <button class="tab" data-tab="keys">Клавиши для press</button>
+    </div>
+
+    <div class="tab-content" id="functions-tab">
+        <div class="search-container">
+            <input type="text" id="search" placeholder="Поиск по функциям..." autofocus>
+            <div class="categories">
+                ${categoriesHtml}
+            </div>
         </div>
+        <div class="cards-container">
+            ${docsHtml}
+        </div>
+        <div class="no-results" id="noResults">Ничего не найдено</div>
     </div>
-    <div class="cards-container">
-        ${docsHtml}
+
+    <div class="tab-content hidden" id="keys-tab">
+        <div class="keys-note">Названия клавиш регистронезависимые. Нажмите на клавишу, чтобы скопировать.</div>
+        ${keysHtml}
     </div>
-    <div class="no-results" id="noResults">Ничего не найдено</div>
     <script nonce="${nonce}">
         const searchInput = document.getElementById('search');
         const cards = document.querySelectorAll('.card');
@@ -262,6 +372,70 @@ class DocsPanelManager {
                 filterCards();
             });
         });
+
+        // Переключение вкладок
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.dataset.tab;
+
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                tabContents.forEach(content => {
+                    if (content.id === tabName + '-tab') {
+                        content.classList.remove('hidden');
+                    } else {
+                        content.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
+        // Копирование клавиши в буфер обмена
+        document.querySelectorAll('.key-name').forEach(keyEl => {
+            keyEl.addEventListener('click', function() {
+                const keyText = this.textContent;
+                navigator.clipboard.writeText(keyText).then(() => {
+                    this.classList.add('copied');
+                    setTimeout(() => {
+                        this.classList.remove('copied');
+                    }, 500);
+                });
+            });
+        });
+
+        // Функция переключения на вкладку
+        function switchToTab(tabName) {
+            tabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(content => {
+                if (content.id === tabName + '-tab') {
+                    content.classList.remove('hidden');
+                } else {
+                    content.classList.add('hidden');
+                }
+            });
+            const targetTab = document.querySelector('.tab[data-tab="' + tabName + '"]');
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+        }
+
+        // Обработка сообщений от расширения
+        window.addEventListener('message', event => {
+            const message = event.data;
+            if (message.command === 'switchTab') {
+                switchToTab(message.tab);
+            }
+        });
+
+        // Начальная вкладка
+        const initialTab = '${this.initialTab}';
+        if (initialTab !== 'functions') {
+            switchToTab(initialTab);
+        }
     </script>
 </body>
 </html>`;
@@ -289,7 +463,13 @@ function escapeHtml(text) {
 function registerDocsCommand(context) {
     context.subscriptions.push(
         vscode.commands.registerCommand('testoHelper.showDocs', () => {
-            DocsPanelManager.createOrShow(context.extensionUri);
+            DocsPanelManager.createOrShow(context.extensionUri, 'functions');
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('testoHelper.showKeysReference', () => {
+            DocsPanelManager.createOrShow(context.extensionUri, 'keys');
         })
     );
 }
