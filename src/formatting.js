@@ -1,5 +1,30 @@
 const vscode = require('vscode');
 
+// Вычисляет эффективный уровень отступа строки (таб = indentSize пробелов)
+function getIndentLevel(line, indentSize) {
+    let spaces = 0;
+    for (const ch of line) {
+        if (ch === '\t') spaces += indentSize;
+        else if (ch === ' ') spaces += 1;
+        else break;
+    }
+    return Math.round(spaces / indentSize);
+}
+
+// Определяет единицу отступа по строке: если начинается с таба — таб, иначе — пробелы
+function lineIndentUnit(line, indentSize) {
+    return line[0] === '\t' ? '\t' : ' '.repeat(indentSize);
+}
+
+// Возвращает оригинальный отступ строки, если уровень совпадает с ожидаемым,
+// иначе генерирует новый отступ на основе стиля строки (таб или пробелы)
+function resolveIndent(line, expectedLevel, indentSize) {
+    if (getIndentLevel(line, indentSize) === expectedLevel) {
+        return line.match(/^(\s*)/)[1];
+    }
+    return lineIndentUnit(line, indentSize).repeat(expectedLevel);
+}
+
 function formatTestoDocument(document) {
     const lines = document.getText().split('\n');
     let formattedLines = [];
@@ -14,7 +39,7 @@ function formatTestoDocument(document) {
     for (let i = 0; i < lines.length; i++) {
         let line = lines[i]; // Сохраняем исходную строку с пробелами
         let trimmedLine = line.trim();
-        let indent = ' '.repeat(indentLevel * indentSize);
+        let indent = resolveIndent(line, indentLevel, indentSize);
 
         // Игнорируем комментарии
         if (trimmedLine.startsWith('#')) {
@@ -64,7 +89,7 @@ function formatTestoDocument(document) {
             // Проверяем, является ли строка началом heredoc
             if (/<<\s*EOF/.test(trimmedLine) && !isHeredocBlock) {
                 isHeredocBlock = true;
-                formattedLines.push(' '.repeat((execIndentLevel + 1) * indentSize) + trimmedLine);
+                formattedLines.push(resolveIndent(line, execIndentLevel + 1, indentSize) + trimmedLine);
                 emptyLineCount = 0;
                 continue;
             }
@@ -84,15 +109,15 @@ function formatTestoDocument(document) {
             if (trimmedLine.endsWith('"""')) {
                 const content = trimmedLine.slice(0, -3).trim();
                 if (content) {
-                    formattedLines.push(' '.repeat((execIndentLevel + 1) * indentSize) + content);
+                    formattedLines.push(lineIndentUnit(line, indentSize).repeat(execIndentLevel + 1) + content);
                 }
-                formattedLines.push(' '.repeat(execIndentLevel * indentSize) + '"""');
+                formattedLines.push(lineIndentUnit(line, indentSize).repeat(execIndentLevel) + '"""');
                 isExecBlock = false;
                 emptyLineCount = 0;
             } else {
                 // Добавляем строку с дополнительным отступом
                 if (trimmedLine) {
-                    formattedLines.push(' '.repeat((execIndentLevel + 1) * indentSize) + trimmedLine);
+                    formattedLines.push(resolveIndent(line, execIndentLevel + 1, indentSize) + trimmedLine);
                     emptyLineCount = 0;
                 } else if (emptyLineCount < 1 && formattedLines.length > 0 && formattedLines[formattedLines.length - 1] !== '') {
                     formattedLines.push('');
@@ -118,7 +143,7 @@ function formatTestoDocument(document) {
                 // Начало многострочного блока
                 formattedLines.push(indent + prefix);
                 if (content) {
-                    formattedLines.push(' '.repeat((execIndentLevel + 1) * indentSize) + content);
+                    formattedLines.push(lineIndentUnit(line, indentSize).repeat(execIndentLevel + 1) + content);
                     emptyLineCount = 0;
                 }
                 isExecBlock = true;
@@ -130,7 +155,7 @@ function formatTestoDocument(document) {
         // Проверяем, начинается ли строка с закрывающей скобки (не комментарий)
         if (trimmedLine.startsWith('}') && !trimmedLine.startsWith('#')) {
             indentLevel = Math.max(0, indentLevel - 1); // Уменьшаем отступ перед этой строкой
-            indent = ' '.repeat(indentLevel * indentSize);
+            indent = resolveIndent(line, indentLevel, indentSize);
         }
 
         // Обрабатываем строку
