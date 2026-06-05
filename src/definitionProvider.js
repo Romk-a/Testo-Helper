@@ -10,6 +10,23 @@ const reservedKeywords = ['if', 'for', 'while', 'switch', 'do', 'else'];
 // Список расширений файлов, которые считаются бинарными (изображения)
 const binaryExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp'];
 
+// Собирает блок комментариев-«шапки» прямо над строкой определения макроса.
+// Идёт вверх, пока строки начинаются с #, пропуская пустые строки вплотную к macro.
+function extractMacroComment(lines, defLineIndex) {
+    const block = [];
+    for (let i = defLineIndex - 1; i >= 0; i--) {
+        const trimmed = lines[i].trim();
+        if (trimmed.startsWith('#')) {
+            block.unshift(lines[i]);
+        } else if (block.length === 0 && trimmed === '') {
+            continue; // пустые строки между комментарием и macro игнорируем
+        } else {
+            break; // комментарий закончился
+        }
+    }
+    return block.join('\n');
+}
+
 async function findMacroInFile(filePath, macroName, visitedFiles = new Set()) {
     if (visitedFiles.has(filePath)) {
         return null; // Избегаем циклических включений
@@ -24,8 +41,10 @@ async function findMacroInFile(filePath, macroName, visitedFiles = new Set()) {
         // Проверяем текущий файл
         if (macroRegex.test(fileContent)) {
             const match = fileContent.match(macroRegex);
+            const lines = fileContent.split('\n');
             const line = fileContent.substring(0, match.index).split('\n').length - 1;
-            return { filePath, line };
+            const comment = extractMacroComment(lines, line);
+            return { filePath, line, comment };
         }
 
         // Ищем все include-директивы
@@ -100,6 +119,70 @@ async function findImagePathInFile(filePath, imageName, visitedFiles = new Set()
     }
 
     return null;
+}
+
+// Превращает блок комментария-маски в оформленный MarkdownString для hover.
+// Маркеры вида [_Заголовок_] становятся жирными заголовками,
+// тело секции [_Пример_] выводится код-блоком с подсветкой testo.
+function renderMacroComment(comment, macroName) {
+    const md = new vscode.MarkdownString();
+
+    // Убираем ведущий # (и один пробел после) и хвостовые пробелы
+    const cleaned = comment
+        .split('\n')
+        .map(l => l.replace(/^\s*#\s?/, '').replace(/\s+$/, ''));
+
+    md.appendMarkdown(`**macro** \`${macroName}\`\n\n`);
+
+    // В hover показываем только эти секции маски
+    const allowedSections = [/условия/i, /параметры/i, /результат/i];
+    let showSection = false;
+    let inExample = false;
+    let exampleLines = [];
+
+    const flushExample = () => {
+        // Срезаем пустые строки в начале и конце примера
+        while (exampleLines.length && exampleLines[0].trim() === '') exampleLines.shift();
+        while (exampleLines.length && exampleLines[exampleLines.length - 1].trim() === '') exampleLines.pop();
+        if (exampleLines.length) {
+            // Убираем общий отступ маски, сохраняя относительные отступы кода
+            const indents = exampleLines
+                .filter(l => l.trim() !== '')
+                .map(l => l.match(/^\s*/)[0].length);
+            const minIndent = indents.length ? Math.min(...indents) : 0;
+            const dedented = exampleLines.map(l => l.slice(minIndent));
+            md.appendCodeblock(dedented.join('\n'), 'testo');
+        }
+        exampleLines = [];
+    };
+
+    for (const line of cleaned) {
+        const headerMatch = line.match(/^\[_(.+?)_\]$/);
+        if (headerMatch) {
+            flushExample();
+            const title = headerMatch[1];
+            // Показываем секцию только если она в белом списке
+            showSection = allowedSections.some(re => re.test(title));
+            inExample = showSection && /пример/i.test(title);
+            if (showSection) {
+                md.appendMarkdown(`\n**${title}**\n\n`);
+            }
+            continue;
+        }
+
+        if (!showSection) {
+            continue;
+        }
+        if (inExample) {
+            exampleLines.push(line);
+        } else if (line.trim() !== '') {
+            // Два пробела в конце — перенос строки в markdown
+            md.appendMarkdown(`${line.trim()}  \n`);
+        }
+    }
+    flushExample();
+
+    return md;
 }
 
 class TestoDefinitionProvider {
@@ -208,6 +291,18 @@ class TestoHoverProvider {
                     md.appendMarkdown('**Пример:**\n');
                     md.appendCodeblock(doc.example, 'testo');
                     return new vscode.Hover(md);
+                }
+            }
+        }
+
+        // Проверяем, наведён ли курсор на вызов (или определение) макроса
+        const macroRange = document.getWordRangeAtPosition(position, /[a-zA-Z_][a-zA-Z0-9_]*(?:\s*\()/);
+        if (macroRange) {
+            const macroName = document.getText(macroRange).replace(/\s*\($/, '');
+            if (macroName && !reservedKeywords.includes(macroName) && !builtinDocs[macroName]) {
+                const result = await findMacroInFile(document.uri.fsPath, macroName, new Set());
+                if (result && result.comment) {
+                    return new vscode.Hover(renderMacroComment(result.comment, macroName));
                 }
             }
         }

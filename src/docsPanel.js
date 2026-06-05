@@ -1,6 +1,7 @@
 const vscode = require('vscode');
 const builtinDocs = require('./builtinDocs');
 const keysReference = require('./keysReference');
+const snippetsReference = require('./snippetsReference');
 
 class DocsPanelManager {
     static currentPanel = undefined;
@@ -87,6 +88,25 @@ class DocsPanelManager {
                     <div class="keys-list">
                         ${keysItems}
                     </div>
+                </div>
+            `;
+        }).join('');
+
+        // Генерация HTML для сниппетов
+        const snippetsHtml = Object.entries(snippetsReference).map(([group, snippets]) => {
+            const snippetItems = snippets.map(s => `
+                <div class="snippet-item">
+                    <div class="snippet-header">
+                        <code class="snippet-prefix">${escapeHtml(s.prefix)}</code>
+                        <span class="snippet-desc">${escapeHtml(s.description)}</span>
+                    </div>
+                    <pre class="snippet-body"><code>${escapeHtml(s.body)}</code></pre>
+                </div>
+            `).join('');
+            return `
+                <div class="snippets-group">
+                    <h3>${escapeHtml(group)}</h3>
+                    ${snippetItems}
                 </div>
             `;
         }).join('');
@@ -304,12 +324,66 @@ class DocsPanelManager {
             font-size: 12px;
             color: var(--vscode-descriptionForeground);
         }
+        .keys-note code {
+            background: var(--vscode-textCodeBlock-background);
+            padding: 1px 4px;
+            border-radius: 2px;
+            font-family: var(--vscode-editor-font-family);
+        }
+        .snippets-group {
+            margin-bottom: 20px;
+        }
+        .snippets-group h3 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            color: var(--vscode-textLink-foreground);
+        }
+        .snippet-item {
+            margin-bottom: 10px;
+            background-color: var(--vscode-editor-inactiveSelectionBackground);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 6px;
+            padding: 10px;
+        }
+        .snippet-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+        .snippet-prefix {
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-family: var(--vscode-editor-font-family);
+            font-size: 13px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .snippet-desc {
+            color: var(--vscode-foreground);
+            font-size: 12px;
+        }
+        .snippet-body {
+            background: var(--vscode-textCodeBlock-background);
+            padding: 8px;
+            border-radius: 4px;
+            margin: 0;
+            overflow-x: auto;
+        }
+        .snippet-body code {
+            font-family: var(--vscode-editor-font-family);
+            font-size: 12px;
+            white-space: pre;
+        }
     </style>
 </head>
 <body>
     <div class="tabs">
         <button class="tab active" data-tab="functions">Функции</button>
         <button class="tab" data-tab="keys">Клавиши для press</button>
+        <button class="tab" data-tab="snippets">Сниппеты</button>
     </div>
 
     <div class="tab-content" id="functions-tab">
@@ -328,6 +402,11 @@ class DocsPanelManager {
     <div class="tab-content hidden" id="keys-tab">
         <div class="keys-note">Названия клавиш регистронезависимые. Нажмите на клавишу, чтобы скопировать в буфер обмена.</div>
         ${keysHtml}
+    </div>
+
+    <div class="tab-content hidden" id="snippets-tab">
+        <div class="keys-note">Введите префикс и нажмите <code>Tab</code> для вставки сниппета.</div>
+        ${snippetsHtml}
     </div>
     <script nonce="${nonce}">
         const searchInput = document.getElementById('search');
