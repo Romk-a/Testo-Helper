@@ -18,8 +18,8 @@ function extractMacroComment(lines, defLineIndex) {
         const trimmed = lines[i].trim();
         if (trimmed.startsWith('#')) {
             block.unshift(lines[i]);
-        } else if (block.length === 0 && trimmed === '') {
-            continue; // пустые строки между комментарием и macro игнорируем
+        } else if (block.length === 0 && (trimmed === '' || /^param\b/.test(trimmed))) {
+            continue; // пустые строки и объявления param между комментарием и macro игнорируем
         } else {
             break; // комментарий закончился
         }

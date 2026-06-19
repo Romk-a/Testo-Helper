@@ -224,7 +224,7 @@
 				},
 				{
 					"name": "storage.type.testo",
-					"match": "\\bparam|image\\b "
+					"match": "\\b(param|image)\\b"
 				}
 			]
 		},
